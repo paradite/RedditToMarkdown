@@ -36,7 +36,7 @@ function fetchData(url) {
     var ouput_block = document.getElementById('ouput-block');
     ouput_block.removeAttribute('hidden');
     ouput_display.innerHTML = output;
-    download(output, 'output.md', 'text/plain');
+    download(output, `${post.title}.md`, 'text/plain');
   };
 }
 
