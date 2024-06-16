@@ -26,10 +26,10 @@ function fetchData(url) {
   http.onload = function () {
     data = http.response;
     const post = data[0].data.children[0].data;
-    const comments = data[1].data.children;
+    // const comments = data[1].data.children;
     displayTitle(post);
-    output += '\n\n## Comments\n\n';
-    comments.forEach(displayComment);
+    // output += '\n\n## Comments\n\n';
+    // comments.forEach(displayComment);
 
     console.log('Done');
     var ouput_display = document.getElementById('ouput-display');
