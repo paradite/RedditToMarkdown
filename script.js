@@ -28,12 +28,35 @@ function startExport() {
   setStyle();
   combinedOutput = '';
 
-  const urls = getFieldUrl()
+  const lines = getFieldUrl()
     .split('\n')
-    .map((url) => url.trim())
-    .filter((url) => url);
-  if (urls.length > 0) {
-    pendingUrls = urls;
+    .map((line) => line.trim())
+    .filter((line) => line);
+
+  if (lines.length > 0) {
+    // Show progress block
+    document.getElementById('progress-block').removeAttribute('hidden');
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-text').textContent = 'Processing URLs...';
+
+    // Check if first line is a URL
+    const isUrl = /^https?:\/\//i.test(lines[0]);
+    if (!isUrl) {
+      // Use first line as filename if no custom filename is set
+      const customFilename = document.getElementById('custom-filename').value;
+      if (!customFilename) {
+        document.getElementById('custom-filename').value =
+          lines[0].replace(/[^a-zA-Z0-9-_]/g, '_') + '.md';
+      }
+      // Remove the first line from URLs to process
+      pendingUrls = lines.slice(1);
+    } else {
+      pendingUrls = lines;
+      // Only clear filename if it's empty (preserve user-entered filename)
+      if (!document.getElementById('custom-filename').value) {
+        document.getElementById('custom-filename').value = '';
+      }
+    }
     currentUrlIndex = 0;
     processNextUrl();
   } else {
@@ -45,11 +68,22 @@ function processNextUrl() {
   if (currentUrlIndex < pendingUrls.length) {
     const url = pendingUrls[currentUrlIndex];
     console.log(`Processing URL ${currentUrlIndex + 1}/${pendingUrls.length}: ${url}`);
+
+    // Update progress
+    const progress = ((currentUrlIndex + 1) / pendingUrls.length) * 100;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-text').textContent = `Processing URL ${
+      currentUrlIndex + 1
+    } of ${pendingUrls.length}: ${url}`;
+
     setTimeout(() => {
       fetchData(url);
     }, 500);
   } else {
     console.log('All URLs processed');
+    // Hide progress block
+    document.getElementById('progress-block').setAttribute('hidden', '');
+
     // Update the display and create download link with combined output
     var output_display = document.getElementById('ouput-display');
     var output_block = document.getElementById('ouput-block');
@@ -63,12 +97,16 @@ function processNextUrl() {
       second: '2-digit',
     });
 
+    // Get custom filename if set, otherwise use default
+    const customFilename = document.getElementById('custom-filename').value;
+    const filename = customFilename || `reddit_posts_${currentDate}_${currentTime}.md`;
+
     // Create download link for combined posts
     const downloadLink = document.createElement('a');
     downloadLink.className = 'btn btn-success';
     downloadLink.style.marginRight = '10px';
     downloadLink.style.marginBottom = '10px';
-    downloadLink.download = `reddit_posts_${currentDate}_${currentTime}.md`;
+    downloadLink.download = filename;
     downloadLink.href = URL.createObjectURL(
       new Blob([collapseMultipleNewlines(combinedOutput)], { type: 'text/plain' })
     );
