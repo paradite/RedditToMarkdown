@@ -5,17 +5,67 @@ var style = 0;
 var escapeNewLine = false;
 var spaceComment = false;
 var includeComments = true;
+var pendingUrls = [];
+var currentUrlIndex = 0;
+var combinedOutput = '';
 
 const onDocumentReady = () => {
-  document.getElementById('url-field').value = getQueryParamUrl();
+  const urls = getQueryParamUrl();
+  if (urls) {
+    document.getElementById('url-field').value = urls;
+  }
   if (getFieldUrl()) {
     startExport();
   }
 };
 
-const getQueryParamUrl = () => new URLSearchParams(window.location.search).get(
-    'url') ?? null;
+const getQueryParamUrl = () => new URLSearchParams(window.location.search).get('url') ?? null;
 const getFieldUrl = () => document.getElementById('url-field').value;
+
+function startExport() {
+  console.log('Start exporting');
+  setStyle();
+  combinedOutput = '';
+
+  const urls = getFieldUrl().split('\n').map(url => url.trim()).filter(url => url);
+  if (urls.length > 0) {
+    pendingUrls = urls;
+    currentUrlIndex = 0;
+    processNextUrl();
+  } else {
+    console.log('No urls provided');
+  }
+}
+
+function processNextUrl() {
+  if (currentUrlIndex < pendingUrls.length) {
+    const url = pendingUrls[currentUrlIndex];
+    console.log(`Processing URL ${currentUrlIndex + 1}/${pendingUrls.length}: ${url}`);
+    fetchData(url);
+  } else {
+    console.log('All URLs processed');
+    // Update the display and create download link with combined output
+    var output_display = document.getElementById('ouput-display');
+    var output_block = document.getElementById('ouput-block');
+    var output_files = document.getElementById('output-files');
+    output_block.removeAttribute('hidden');
+
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    // Create download link for combined posts
+    const downloadLink = document.createElement('a');
+    downloadLink.className = 'btn btn-success';
+    downloadLink.style.marginRight = '10px';
+    downloadLink.style.marginBottom = '10px';
+    downloadLink.download = `reddit_posts_${currentDate}.md`;
+    downloadLink.href = URL.createObjectURL(new Blob([combinedOutput], {type: 'text/plain'}));
+    downloadLink.textContent = 'Download All Posts';
+    output_files.appendChild(downloadLink);
+    
+    // Update preview with combined output
+    output_display.innerHTML = combinedOutput;
+  }
+}
 
 function fetchData(url) {
   output = '';
@@ -35,12 +85,17 @@ function fetchData(url) {
       comments.forEach(displayComment);
     }
 
-    console.log('Done');
-    var ouput_display = document.getElementById('ouput-display');
-    var ouput_block = document.getElementById('ouput-block');
-    ouput_block.removeAttribute('hidden');
-    ouput_display.innerHTML = output;
-    download(output, `${post.title}.md`, 'text/plain');
+    // Add separator between posts
+    if (currentUrlIndex > 0) {
+      combinedOutput += '\n\n---\n\n';
+    }
+    combinedOutput += output;
+
+    console.log('Done processing URL');
+    
+    // Process next URL
+    currentUrlIndex++;
+    processNextUrl();
   };
 }
 
@@ -70,18 +125,6 @@ function setStyle() {
   }
 }
 
-function startExport() {
-  console.log('Start exporting');
-  setStyle();
-
-  var url = getFieldUrl();
-  if (url) {
-    fetchData(url);
-  } else {
-    console.log('No url provided');
-  }
-}
-
 function download(text, name, type) {
   var a = document.getElementById('a');
   a.removeAttribute('disabled');
@@ -95,7 +138,7 @@ function displayTitle(post) {
   if (post.selftext) {
     output += `\n${post.selftext}\n`;
   }
-  output += `\n[permalink](http://reddit.com${post.permalink})`;
+  output += `\n[permalink](https://reddit.com${post.permalink})`;
   output += `\nby *${post.author}* (↑ ${post.ups}/ ↓ ${post.downs})`;
 }
 

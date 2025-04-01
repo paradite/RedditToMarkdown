@@ -17,15 +17,15 @@
 <div class="container">
   <h1>Export reddit post to markdown format</h1>
   <div class="form-group">
-    <label for="url-field">Put the url of the reddit post you would like to export</label>
-    <input
+    <label for="url-field">Put the URLs of the reddit posts you would like to export (one URL per line)</label>
+    <textarea
         name="url"
         class="form-control"
-        type="text"
         id="url-field"
-        placeholder="http://reddit.com/r/..."
+        rows="5"
+        placeholder="https://reddit.com/r/...&#10;https://reddit.com/r/..."
         required
-    />
+    ></textarea>
   </div>
 
   <label>Export style :</label>
@@ -39,7 +39,7 @@
   <label>Export option :</label>
 
   <div class="form-group form-check">
-    <input type="checkbox" class="form-check-input" id="includeComments" checked/>
+    <input type="checkbox" class="form-check-input" id="includeComments" />
     <label class="form-check-label" for="includeComments">Include comments</label>
 
     <input type="checkbox" class="form-check-input" id="escapeNewLine"/>
@@ -52,7 +52,8 @@
   <button class="btn btn-primary" onclick="startExport()">Export</button>
   <a href="" id="a" download disabled class="btn btn-success">Download markdown file</a>
   <div id="ouput-block" hidden>
-    <h3>Output</h3>
+    <h3>Combined Output</h3>
+    <div id="output-files"></div>
     <pre id="ouput-display"></pre>
     <br/>
   </div>
