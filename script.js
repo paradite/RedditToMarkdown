@@ -4,6 +4,7 @@ var output = '';
 var style = 0;
 var escapeNewLine = false;
 var spaceComment = false;
+var includeComments = true;
 
 const onDocumentReady = () => {
   document.getElementById('url-field').value = getQueryParamUrl();
@@ -26,10 +27,13 @@ function fetchData(url) {
   http.onload = function () {
     data = http.response;
     const post = data[0].data.children[0].data;
-    // const comments = data[1].data.children;
+    const comments = data[1].data.children;
     displayTitle(post);
-    // output += '\n\n## Comments\n\n';
-    // comments.forEach(displayComment);
+    
+    if (includeComments && comments) {
+      output += '\n\n## Comments\n\n';
+      comments.forEach(displayComment);
+    }
 
     console.log('Done');
     var ouput_display = document.getElementById('ouput-display');
@@ -57,6 +61,12 @@ function setStyle() {
     spaceComment = true;
   } else {
     spaceComment = false;
+  }
+
+  if (document.getElementById('includeComments').checked) {
+    includeComments = true;
+  } else {
+    includeComments = false;
   }
 }
 
